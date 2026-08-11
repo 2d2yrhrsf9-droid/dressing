@@ -22,6 +22,13 @@ question posée est presque toujours la même : « qu'est-ce qu'il me reste en
   « penderie du bas ») pour retrouver l'objet quand il se vend. Vinted n'a rien
   de tel. Ces notes restent **dans le téléphone** ; l'écran « À propos » permet
   de les exporter.
+- **Mémoire des disparus** — Flavie masque souvent ses annonces, et l'API ne
+  renvoie que ce qui est en ligne. L'app garde donc les articles qui ont quitté
+  le profil, marqués « plus en ligne », avec leur emplacement de rangement :
+  c'est justement quand un article est masqué qu'on cherche où il est. Depuis
+  un profil public on ne peut pas distinguer vendu, masqué et supprimé — le
+  libellé ne prétend donc rien de plus. Ils sont écartés par défaut, une
+  étiquette en haut de l'écran les ramène.
 - **Hors réseau** — une fois ouverte, l'app fonctionne sans connexion :
   l'index et les photos déjà vues sont conservés dans le téléphone.
 
@@ -79,6 +86,9 @@ emplacements de rangement, eux, ne quittent jamais le téléphone.
 
     app/indexeur.py         construit l'index depuis Vinted
     app/outils/servir.py    petit serveur local pour essayer
+    app/outils/construire.py fond l'app en un seul fichier HTML
+    app/outils/repecher.py  retrouve dans l'historique git les articles
+                            disparus avant que l'index ne les mémorise
     app/outils/icone.py     dessine les icônes PNG
     app/web/                l'app : index.html, app.css, app.js, sw.js
     app/web/index.json      l'index (produit, mais versionné : c'est ce que

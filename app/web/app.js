@@ -14,10 +14,20 @@ let ARTICLES = [];
 let META = {};
 let rangements = lireRangements();
 
-const filtres = { q: '', genre: [], taille: [], type: [], marque: [], etat: [], rayon: [], range: [] };
+// « En ligne » est posé d'emblée : la question courante est ce qu'il reste à
+// vendre. Le filtre apparaît comme une étiquette, qu'un doigt retire pour
+// retrouver aussi ce qui a été masqué, vendu ou retiré.
+const filtres = {
+  q: '', genre: [], taille: [], type: [], marque: [], etat: [], rayon: [],
+  range: [], ligne: ['En ligne'],
+};
 let tri = 'recent';
 
+const EN_LIGNE = 'En ligne';
+const ABSENT = 'Plus en ligne';
+
 const FACETTES = [
+  { cle: 'ligne',  titre: 'Disponibilité', champ: 'ligne', ordre: [EN_LIGNE, ABSENT] },
   { cle: 'genre',  titre: 'Genre',      champ: 'genre',  ordre: ['Fille', 'Garçon', 'Femme', 'Homme'] },
   { cle: 'taille', titre: 'Taille',     champ: 'taille', ordre: 'taille' },
   { cle: 'type',   titre: 'Type',       champ: 'type',   ordre: 'nombre' },
@@ -70,6 +80,7 @@ function charger(index) {
   META = index;
   ARTICLES = index.articles.map((article) => ({
     ...article,
+    ligne: article.en_ligne === false ? ABSENT : EN_LIGNE,
     recherche: [article.titre, article.marque, article.categorie, article.taille]
       .join(' ').toLowerCase(),
   }));
@@ -167,8 +178,8 @@ function rendre() {
 
   const total = ARTICLES.length;
   const compte = liste.length === total
-    ? `${total} annonces`
-    : `${liste.length} sur ${total} annonces`;
+    ? `${total} articles`
+    : `${liste.length} sur ${total} articles`;
   $('decompte').textContent = compte + fraicheur();
   $('aucun-resultat').hidden = liste.length > 0;
 
@@ -193,13 +204,14 @@ function carte(article) {
   if (details) texte.appendChild(ligne('carte__detail', details));
   texte.appendChild(ligne('carte__prix', prixLisible(article.prix)));
 
-  const emplacement = rangements[article.id];
-  if (emplacement) {
-    const pastille = ligne('pastille', emplacement);
-    pastille.style.marginTop = '4px';
-    pastille.style.alignSelf = 'flex-start';
-    texte.appendChild(pastille);
+  const marques = document.createElement('div');
+  marques.className = 'marques';
+  if (article.ligne === ABSENT) {
+    marques.appendChild(ligne('pastille pastille--absente', ABSENT));
   }
+  const emplacement = rangements[article.id];
+  if (emplacement) marques.appendChild(ligne('pastille', emplacement));
+  if (marques.children.length) texte.appendChild(marques);
 
   bouton.appendChild(texte);
   bouton.addEventListener('click', () => ouvrirFiche(article));
@@ -413,6 +425,10 @@ function ouvrirFiche(article) {
   corps.appendChild(titre);
 
   const lignes = [
+    ['Statut', article.ligne === ABSENT
+      ? `Plus en ligne depuis le ${dateLisible(article.disparu_le)}`
+        + ' — vendu, masqué ou retiré'
+      : ''],
     ['Prix', `${prixLisible(article.prix)} (${prixLisible(article.prix_total)} pour l’acheteur)`],
     ['Taille', article.taille],
     ['Marque', article.marque],
@@ -482,7 +498,10 @@ function dessinerTailles() {
   ];
 
   for (const [nom, dans] of groupes) {
-    const concernes = ARTICLES.filter((article) => article.taille && dans(article));
+    // Ce tableau répond à « qu'est-ce qu'il me reste à vendre » : ce qui n'est
+    // plus en ligne n'y a pas sa place.
+    const concernes = ARTICLES.filter(
+      (article) => article.taille && article.ligne === EN_LIGNE && dans(article));
     if (concernes.length === 0) continue;
 
     const genres = [...new Set(concernes.map((a) => a.genre || '—'))]
@@ -552,6 +571,7 @@ function celluleNombre(nombre, taille, genre) {
   bouton.disabled = nombre === 0;
   bouton.addEventListener('click', () => {
     for (const { cle } of FACETTES) filtres[cle] = [];
+    filtres.ligne = [EN_LIGNE];   // le tableau ne compte que ce qui est en ligne
     filtres.taille = [taille];
     if (genre) filtres.genre = [genre === '—' ? '' : genre];
     $('champ-recherche').value = '';
@@ -673,9 +693,9 @@ function fraicheur() {
     date.getFullYear(), date.getMonth(), date.getDate()).getTime();
   const releve = new Date(META.genere_le);
   const ecart = Math.round((jour(new Date()) - jour(releve)) / 86400000);
-  if (ecart <= 0) return ' · relevées aujourd’hui';
-  if (ecart === 1) return ' · relevées hier';
-  if (ecart < 7) return ` · relevées il y a ${ecart} jours`;
-  return ` · relevées le ${releve.toLocaleDateString('fr-FR',
+  if (ecart <= 0) return ' · relevés aujourd’hui';
+  if (ecart === 1) return ' · relevés hier';
+  if (ecart < 7) return ` · relevés il y a ${ecart} jours`;
+  return ` · relevés le ${releve.toLocaleDateString('fr-FR',
     { day: 'numeric', month: 'long' })}`;
 }

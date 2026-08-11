@@ -379,13 +379,55 @@ def enrichir(articles, classement, chemins):
     return articles
 
 
+def index_precedent():
+    """Les articles du relevé précédent, tels qu'ils étaient."""
+    if not SORTIE.exists():
+        return []
+    return json.loads(SORTIE.read_text(encoding="utf-8")).get("articles", [])
+
+
+def fusionner(articles, anciens):
+    """Garde ce qui a quitté le profil au lieu de l'oublier.
+
+    Flavie masque souvent ses annonces, et l'API publique ne renvoie que ce qui
+    est en ligne : sans mémoire, un article masqué s'évanouirait de l'app avec
+    son emplacement de rangement — juste au moment où l'on cherche où il est.
+
+    Depuis un profil public, impossible de distinguer vendu, masqué et
+    supprimé : on ne dit donc que « n'apparaît plus ».
+    """
+    aujourdhui = datetime.now(timezone.utc).date().isoformat()
+    presents = {article["id"] for article in articles}
+
+    for article in articles:
+        article["en_ligne"] = True
+        article["vu_le"] = aujourdhui
+        article.pop("disparu_le", None)
+
+    revenus = 0
+    for ancien in anciens:
+        if ancien["id"] in presents:
+            if not ancien.get("en_ligne", True):
+                revenus += 1
+            continue
+        garde = dict(ancien)
+        garde["en_ligne"] = False
+        garde.setdefault("disparu_le", aujourdhui)
+        articles.append(garde)
+
+    return articles, revenus
+
+
 def ecrire(articles):
     SORTIE.parent.mkdir(parents=True, exist_ok=True)
+    en_ligne = sum(1 for article in articles if article.get("en_ligne", True))
     index = {
         "genere_le": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "membre": PROFIL,
         "profil": f"{BASE}/member/{MEMBRE}-{PROFIL}",
         "total": len(articles),
+        "en_ligne": en_ligne,
+        "hors_ligne": len(articles) - en_ligne,
         "articles": sorted(articles, key=lambda a: -a["id"]),
     }
     SORTIE.write_text(
@@ -440,13 +482,9 @@ def main():
     chemins = aplatir(racines)
     print(f"  {len(chemins)} catégories", file=sys.stderr)
 
+    # On garde aussi le classement des articles absents : s'ils reviennent en
+    # ligne, leur catégorie est déjà connue et ne coûte pas une requête.
     classement = classement_existant(arguments.complet)
-    presents = {article["id"] for article in articles}
-    classement = {
-        article: catalogue
-        for article, catalogue in classement.items()
-        if article in presents
-    }
     manquants = [
         article["id"] for article in articles if article["id"] not in classement
     ]
@@ -469,13 +507,28 @@ def main():
         print("Rien de nouveau à classer.", file=sys.stderr)
 
     enrichir(articles, classement, chemins)
+
+    # Après l'enrichissement : les articles repêchés du relevé précédent
+    # portent déjà leur catégorie, il ne faut pas la leur reprendre.
+    anciens = [] if arguments.complet else index_precedent()
+    articles, revenus = fusionner(articles, anciens)
+
     index = ecrire(articles)
     sans = sum(1 for article in articles if not article["categorie"])
     print(
-        f"\n{index['total']} annonces écrites dans {SORTIE}"
-        + (f" ({sans} sans catégorie)" if sans else ""),
+        f"\n{index['en_ligne']} annonces en ligne écrites dans {SORTIE}",
         file=sys.stderr,
     )
+    if index["hors_ligne"]:
+        print(
+            f"{index['hors_ligne']} article(s) gardé(s) en mémoire, "
+            "vendus, masqués ou retirés",
+            file=sys.stderr,
+        )
+    if revenus:
+        print(f"{revenus} article(s) revenu(s) en ligne", file=sys.stderr)
+    if sans:
+        print(f"{sans} sans catégorie", file=sys.stderr)
 
 
 if __name__ == "__main__":
