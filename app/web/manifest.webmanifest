@@ -1,0 +1,17 @@
+{
+  "name": "Le dressing",
+  "short_name": "Dressing",
+  "description": "Rechercher dans les annonces Vinted de flavie_grt, même sans réseau.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#097681",
+  "theme_color": "#097681",
+  "lang": "fr",
+  "icons": [
+    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

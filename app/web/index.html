@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Le dressing</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#097681">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dressing">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone-180.png">
+<link rel="icon" href="icone-192.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="entete">
+  <div class="entete__haut">
+    <h1>Le dressing</h1>
+    <button class="lien-discret" id="bouton-infos" aria-label="Informations">&#9432;</button>
+  </div>
+
+  <div class="recherche">
+    <input type="search" id="champ-recherche" placeholder="Rechercher un article, une marque…"
+           autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+    <button class="recherche__effacer" id="effacer-recherche" aria-label="Effacer" hidden>&times;</button>
+  </div>
+
+  <nav class="facettes" id="facettes"></nav>
+  <div class="chips" id="chips" hidden></div>
+</header>
+
+<main>
+  <section id="vue-chercher">
+    <p class="decompte" id="decompte"></p>
+    <div class="grille" id="resultats"></div>
+    <p class="vide" id="aucun-resultat" hidden>Rien ne correspond. Essayez d'enlever un filtre.</p>
+  </section>
+
+  <section id="vue-tailles" hidden>
+    <p class="intro">Ce qu'il reste, taille par taille. Touchez un nombre pour voir les articles.</p>
+    <div id="tableau-tailles"></div>
+  </section>
+</main>
+
+<nav class="onglets">
+  <button data-vue="chercher" class="actif">Chercher</button>
+  <button data-vue="tailles">Tailles</button>
+</nav>
+
+<!-- Feuille de filtre, remplie à la volée -->
+<div class="voile" id="voile" hidden></div>
+<div class="feuille" id="feuille" hidden role="dialog" aria-modal="true">
+  <div class="feuille__entete">
+    <button class="lien-discret" id="feuille-annuler">Annuler</button>
+    <strong id="feuille-titre"></strong>
+    <button class="lien-discret" id="feuille-vider">Tout</button>
+  </div>
+  <div class="feuille__corps" id="feuille-corps"></div>
+  <div class="feuille__pied">
+    <button class="bouton-plein" id="feuille-valider">Voir les résultats</button>
+  </div>
+</div>
+
+<!-- Fiche d'un article -->
+<div class="fiche" id="fiche" hidden>
+  <div class="fiche__barre">
+    <button class="lien-discret" id="fiche-fermer">&larr; Retour</button>
+  </div>
+  <div class="fiche__corps" id="fiche-corps"></div>
+</div>
+
+<!-- Informations et entretien de l'index -->
+<div class="fiche" id="infos" hidden>
+  <div class="fiche__barre">
+    <button class="lien-discret" id="infos-fermer">&larr; Retour</button>
+  </div>
+  <div class="fiche__corps">
+    <h2>À propos</h2>
+    <p id="infos-fraicheur" class="gris"></p>
+    <p>Cet index est une copie du dressing Vinted de <strong>flavie_grt</strong>, consultable
+       hors réseau. Il ne modifie rien sur Vinted&nbsp;: pour changer un prix ou une description,
+       il faut passer par l'application Vinted.</p>
+
+    <h3>Emplacements de rangement</h3>
+    <p>Les emplacements que vous notez sur les articles restent <strong>dans ce téléphone</strong>&nbsp;;
+       ils ne sont envoyés nulle part. Pensez à les exporter de temps en temps.</p>
+    <div class="rangee-boutons">
+      <button class="bouton-creux" id="exporter">Exporter</button>
+      <button class="bouton-creux" id="importer">Importer</button>
+    </div>
+    <input type="file" id="fichier-import" accept="application/json" hidden>
+    <p id="infos-rangements" class="gris"></p>
+
+    <h3>Mise à jour</h3>
+    <p>L'index se recharge tout seul à l'ouverture quand il y a du réseau.</p>
+    <div class="rangee-boutons">
+      <button class="bouton-creux" id="recharger">Recharger maintenant</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
