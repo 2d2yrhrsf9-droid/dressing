@@ -5,6 +5,11 @@
 
 const CLE_RANGEMENTS = 'dressing.rangements';
 
+// La page où l'on relance le relevé à la main. Elle exige d'être connecté à
+// GitHub avec les droits sur le dépôt : c'est pour qui administre l'outil.
+const ATELIER =
+  'https://github.com/2d2yrhrsf9-droid/dressing/actions/workflows/indexer.yml';
+
 let ARTICLES = [];
 let META = {};
 let rangements = lireRangements();
@@ -110,6 +115,7 @@ function brancher() {
   $('importer').addEventListener('click', () => $('fichier-import').click());
   $('fichier-import').addEventListener('change', importer);
   $('recharger').addEventListener('click', recharger);
+  $('indexer').href = ATELIER;
 }
 
 function montrerVue(vue) {

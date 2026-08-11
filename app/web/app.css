@@ -335,11 +335,17 @@ main { padding: 0 12px calc(72px + var(--bas)); }
   font-weight: 650;
 }
 
+/* Sert aussi bien à un bouton qu'à un lien : d'où les propriétés que <a>
+   n'hérite pas de lui-même. */
 .bouton-creux {
+  display: inline-block;
   border: 1px solid var(--trait);
   border-radius: 10px;
   background: var(--carte);
   padding: 9px 14px;
+  color: var(--encre);
+  text-decoration: none;
+  font: inherit;
 }
 
 .rangee-boutons { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
