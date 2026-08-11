@@ -46,6 +46,12 @@ jobs:
           git diff --staged --quiet || git commit -m "Relever le dressing du jour"
           git push
 
+      # Allume GitHub Pages tout seul si personne ne l'a fait à la main :
+      # l'étape de publication échouerait sinon, et le réglage est enfoui.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: app/web
