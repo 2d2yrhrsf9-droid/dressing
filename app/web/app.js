@@ -160,9 +160,10 @@ function rendre() {
   resultats.innerHTML = '';
 
   const total = ARTICLES.length;
-  $('decompte').textContent = liste.length === total
+  const compte = liste.length === total
     ? `${total} annonces`
     : `${liste.length} sur ${total} annonces`;
+  $('decompte').textContent = compte + fraicheur();
   $('aucun-resultat').hidden = liste.length > 0;
 
   const fragment = document.createDocumentFragment();
@@ -656,4 +657,19 @@ function dateLisible(iso) {
   const date = new Date(iso);
   return date.toLocaleDateString('fr-FR',
     { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/** Depuis quand l'index date — l'app se rafraîchit une fois par nuit, mieux
+ *  vaut le dire que de laisser croire à des chiffres de l'instant. */
+function fraicheur() {
+  if (!META.genere_le) return '';
+  const jour = (date) => new Date(
+    date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const releve = new Date(META.genere_le);
+  const ecart = Math.round((jour(new Date()) - jour(releve)) / 86400000);
+  if (ecart <= 0) return ' · relevées aujourd’hui';
+  if (ecart === 1) return ' · relevées hier';
+  if (ecart < 7) return ` · relevées il y a ${ecart} jours`;
+  return ` · relevées le ${releve.toLocaleDateString('fr-FR',
+    { day: 'numeric', month: 'long' })}`;
 }

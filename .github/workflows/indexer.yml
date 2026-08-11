@@ -11,10 +11,11 @@ on:
   workflow_dispatch:        # et à la demande, depuis l'onglet Actions
   push:
     branches: [main]
-    # Ce même travail recommite l'index : sans cette exclusion, il se
+    # Ce même travail recommite ces fichiers : sans cette exclusion, il se
     # redéclencherait lui-même sans fin.
     paths-ignore:
       - "app/web/index.json"
+      - "derniere-indexation.txt"
 
 permissions:
   contents: write   # l'index relevé est recommité dans le dépôt
@@ -38,12 +39,26 @@ jobs:
       - name: Mettre l'index à jour
         run: python3 app/indexeur.py
 
+      # GitHub désactive les tâches planifiées d'un dépôt resté soixante jours
+      # sans activité humaine — et les poussées faites avec le jeton
+      # automatique du workflow ne comptent pas pour de l'activité. D'où
+      # l'horodatage, poussé avec un jeton personnel quand il est fourni :
+      # c'est ce qui remet le compteur à zéro et garde l'indexation vivante.
+      # Sans le secret, tout fonctionne pareil, mais le compteur court.
       - name: Garder l'index dans le dépôt
+        env:
+          JETON: ${{ secrets.JETON_ACTIVITE }}
         run: |
+          date -u +"Dernière indexation : %Y-%m-%d %H:%M UTC" > derniere-indexation.txt
           git config user.name "indexeur"
           git config user.email "indexeur@users.noreply.github.com"
-          git add app/web/index.json
-          git diff --staged --quiet || git commit -m "Relever le dressing du jour"
+          git add app/web/index.json derniere-indexation.txt
+          git diff --staged --quiet && exit 0
+          git commit -m "Relever le dressing du jour"
+          if [ -n "$JETON" ]; then
+            git remote set-url origin \
+              "https://x-access-token:${JETON}@github.com/${GITHUB_REPOSITORY}.git"
+          fi
           git push
 
       # Allume GitHub Pages tout seul si personne ne l'a fait à la main :
