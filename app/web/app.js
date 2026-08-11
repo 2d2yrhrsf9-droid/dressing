@@ -569,8 +569,20 @@ function lireRangements() {
 function noterRangement(id, valeur) {
   if (valeur) rangements[id] = valeur;
   else delete rangements[id];
-  localStorage.setItem(CLE_RANGEMENTS, JSON.stringify(rangements));
+  garder();
   marquerRangements();
+}
+
+/** Écrit les rangements, sans casser là où le navigateur refuse d'écrire.
+ *  C'est le cas d'un fichier ouvert directement depuis le disque, ou d'une
+ *  navigation privée : la recherche doit continuer de marcher. */
+function garder() {
+  try {
+    localStorage.setItem(CLE_RANGEMENTS, JSON.stringify(rangements));
+    return true;
+  } catch (erreur) {
+    return false;
+  }
 }
 
 function marquerRangements() {
@@ -583,6 +595,13 @@ function marquerRangements() {
 
 function majInfos() {
   const notes = Object.keys(rangements).length;
+  if (!garder()) {
+    $('infos-rangements').textContent =
+      'Ce navigateur refuse d’enregistrer : les emplacements notés ici seront '
+      + 'perdus en fermant. Ouvrez l’app depuis une adresse web plutôt que '
+      + 'depuis un fichier.';
+    return;
+  }
   $('infos-rangements').textContent = notes === 0
     ? 'Aucun emplacement noté pour l’instant.'
     : `${notes} emplacement${notes > 1 ? 's' : ''} noté${notes > 1 ? 's' : ''}.`;
@@ -604,7 +623,7 @@ async function importer(evenement) {
   try {
     const venus = JSON.parse(await fichier.text());
     rangements = { ...rangements, ...venus };
-    localStorage.setItem(CLE_RANGEMENTS, JSON.stringify(rangements));
+    garder();
     marquerRangements();
     majInfos();
     rendre();
