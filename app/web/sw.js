@@ -1,11 +1,19 @@
 /* Service worker : l'app doit s'ouvrir et rester utilisable sans réseau.
 
-   Trois régimes selon ce qu'on demande :
-   - la coquille (HTML, CSS, JS, icônes) : le cache d'abord, mise à jour en fond ;
-   - index.json : le réseau d'abord, le cache si ça ne répond pas ;
-   - les photos Vinted : le cache d'abord, plafonné pour ne pas saturer. */
+   Deux régimes selon ce qu'on demande :
+   - la coquille (HTML, CSS, JS, icônes) et index.json : le réseau d'abord, le
+     cache si ça ne répond pas ;
+   - les photos Vinted : le cache d'abord, plafonné pour ne pas saturer.
 
-const VERSION = 'dressing-v1';
+   La coquille a d'abord été servie par le cache, avec mise à jour en fond :
+   c'est plus rapide, mais on voyait alors la version précédente au premier
+   chargement suivant une publication, et la nouvelle seulement au second. Pour
+   trente kilo-octets, la fraîcheur vaut mieux que les quelques millisecondes
+   gagnées. Hors réseau, le cache prend le relais comme avant. */
+
+// À changer quand la stratégie de cache change : l'activation vide alors les
+// caches des versions précédentes.
+const VERSION = 'dressing-v2';
 const COQUILLE = `${VERSION}-coquille`;
 const DONNEES = `${VERSION}-donnees`;
 const PHOTOS = `${VERSION}-photos`;
@@ -47,12 +55,9 @@ self.addEventListener('fetch', (evenement) => {
 
   const url = new URL(requete.url);
 
-  if (url.origin === self.location.origin && url.pathname.endsWith('index.json')) {
-    evenement.respondWith(reseauDabord(requete));
-    return;
-  }
   if (url.origin === self.location.origin) {
-    evenement.respondWith(cacheDabord(requete, COQUILLE));
+    const cache = url.pathname.endsWith('index.json') ? DONNEES : COQUILLE;
+    evenement.respondWith(reseauDabord(requete, cache));
     return;
   }
   if (/vinted\.net$/.test(url.hostname)) {
@@ -60,8 +65,8 @@ self.addEventListener('fetch', (evenement) => {
   }
 });
 
-async function reseauDabord(requete) {
-  const cache = await caches.open(DONNEES);
+async function reseauDabord(requete, nomCache) {
+  const cache = await caches.open(nomCache);
   try {
     const reponse = await fetch(requete);
     if (reponse.ok) cache.put(requete, reponse.clone());
@@ -69,20 +74,14 @@ async function reseauDabord(requete) {
   } catch (erreur) {
     const garde = await cache.match(requete);
     if (garde) return garde;
+    // Une navigation hors réseau vers une adresse jamais visitée : on rend la
+    // page d'accueil, qui est en cache, plutôt qu'une erreur du navigateur.
+    if (requete.mode === 'navigate') {
+      const accueil = await cache.match('./index.html');
+      if (accueil) return accueil;
+    }
     throw erreur;
   }
-}
-
-async function cacheDabord(requete, nomCache) {
-  const cache = await caches.open(nomCache);
-  const garde = await cache.match(requete);
-  const frais = fetch(requete)
-    .then((reponse) => {
-      if (reponse.ok) cache.put(requete, reponse.clone());
-      return reponse;
-    })
-    .catch(() => garde);
-  return garde || frais;
 }
 
 async function photo(requete) {
