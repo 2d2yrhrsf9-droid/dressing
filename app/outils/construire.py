@@ -143,16 +143,27 @@ def main():
                          help="embarquer aussi les vignettes (fichier de plusieurs Mo)")
     options.add_argument("--fragment", action="store_true",
                          help="sans <html> ni <head>, pour un hébergeur qui les fournit")
+    options.add_argument("--remplacer", action="store_true",
+                         help="autoriser l'écrasement d'un fichier existant")
     arguments = options.parse_args()
 
-    fichier = construire(Path(arguments.destination).resolve(),
-                         arguments.photos, arguments.fragment)
+    destination = Path(arguments.destination).resolve()
+    # Un fichier déjà construit est peut-être celui que quelqu'un utilise, et
+    # ce dossier est synchronisé par Dropbox : on ne l'écrase pas sans le dire.
+    if destination.exists() and not arguments.remplacer:
+        print(f"{destination} existe déjà — laissé intact.", file=sys.stderr)
+        print("Donnez un autre chemin, ou --remplacer pour l'écraser.",
+              file=sys.stderr)
+        return 1
+
+    fichier = construire(destination, arguments.photos, arguments.fragment)
     poids = fichier.stat().st_size / 1024
     index = json.loads((WEB / "index.json").read_text(encoding="utf-8"))
     print(f"{fichier}")
     print(f"{index['total']} annonces — "
           + (f"{poids / 1024:.1f} Mo" if poids > 1024 else f"{poids:.0f} Ko"))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
