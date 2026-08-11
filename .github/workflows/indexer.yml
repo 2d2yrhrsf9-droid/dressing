@@ -9,6 +9,12 @@ on:
   schedule:
     - cron: "17 3 * * *"   # 3 h 17 UTC, quand Vinted est au calme
   workflow_dispatch:        # et à la demande, depuis l'onglet Actions
+  push:
+    branches: [main]
+    # Ce même travail recommite l'index : sans cette exclusion, il se
+    # redéclencherait lui-même sans fin.
+    paths-ignore:
+      - "app/web/index.json"
 
 permissions:
   contents: write   # l'index relevé est recommité dans le dépôt
