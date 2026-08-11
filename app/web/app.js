@@ -39,6 +39,16 @@ demarrer();
 
 async function demarrer() {
   brancher();
+
+  // En fichier unique, l'index voyage dans la page : ni requête, ni service
+  // worker, rien à côté du fichier.
+  const embarque = $('index-embarque');
+  if (embarque) {
+    charger(JSON.parse(embarque.textContent));
+    $('recharger').hidden = true;
+    return;
+  }
+
   try {
     const local = await fetch('index.json', { cache: 'no-cache' });
     charger(await local.json());

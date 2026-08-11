@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 .DS_Store
 .claude/
+
+# Le fichier unique est un produit, reconstruit à la demande.
+dressing.html

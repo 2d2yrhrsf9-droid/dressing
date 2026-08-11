@@ -22,6 +22,29 @@
   }
 }
 
+/* Certains hôtes laissent le lecteur basculer le thème à la main, en posant
+   data-theme sur la racine : cela doit l'emporter dans les deux sens sur la
+   préférence du système. */
+:root[data-theme="dark"] {
+  --teal: #3aa8b4;
+  --teal-clair: #14323a;
+  --encre: #eef4f6;
+  --gris: #93a6ae;
+  --trait: #2a3940;
+  --fond: #0e1519;
+  --carte: #162126;
+}
+
+:root[data-theme="light"] {
+  --teal: #097681;
+  --teal-clair: #e6f2f3;
+  --encre: #16232a;
+  --gris: #6b7c85;
+  --trait: #dde5e8;
+  --fond: #ffffff;
+  --carte: #ffffff;
+}
+
 * { box-sizing: border-box; }
 
 /* Plusieurs de ces blocs sont en display:flex, qui l'emporterait sinon sur
