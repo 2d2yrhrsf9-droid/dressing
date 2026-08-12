@@ -105,11 +105,17 @@ button { font: inherit; color: inherit; }
   border: 0;
   border-radius: 10px;
   background: #fff;
-  color: #16232a;
+  color: #000;
+  /* Safari sur iOS impose parfois sa propre couleur de texte — remplissage
+     automatique, contraste renforcé. text-fill-color passe devant. */
+  -webkit-text-fill-color: #000;
   -webkit-appearance: none;
 }
 
-.recherche input::placeholder { color: #6b7c85; }
+.recherche input::placeholder {
+  color: #6b7c85;
+  -webkit-text-fill-color: #6b7c85;
+}
 
 .recherche input::-webkit-search-decoration,
 .recherche input::-webkit-search-cancel-button { -webkit-appearance: none; }
